@@ -82,14 +82,13 @@ class AgentBasedSimulation:
                      "breedNCMap": breedNCMap}  # not using list, because easier to use a wrong index
 
         # Those that switched and those that didn't
-        data.loc[:, breedColumns["nextCol"]] = data.groupby(breedColumns["currCol"]).apply(lambda group: \
+        data.groupby(breedColumns["currCol"]).apply(lambda group: \
                         self.applyMutations(group,brand_factor,breedColumns,breedMaps))
 
     def applyMutations(self, groupDf, brand_factor, breedColumns, breedMaps):
         # arguments are a little bit all over the place. brand_factor, for example can be calced here.
 
-        breed = np.unique(groupDf[breedColumns['currCol']])[
-            0]  # Probably unnecessary. There should be a way to access group id.
+        breed = np.unique(groupDf[breedColumns['currCol']])[0]  # TODO: is this the correct way of retrieving the group id?
 
         rand = np.random.uniform(0, 3, len(groupDf))
         affinity = groupDf.a1 + pd.Series(rand) * groupDf.a2
@@ -100,17 +99,15 @@ class AgentBasedSimulation:
         # whether you have already updated the dataFrame. So you would have two Ref classes, one
         # for breed_c and one for breed_nc.
         if (breed.startswith("Breed_C")):
-            columnWithCCheck = (groupDf[breedColumns["currCol"]].str.startswith(
-                "Breed_C"))  # instead of making 3 checks: == "Breed_C" or == "Breed_C_Changed" or == "Breed_C_Unchanged"
-            maskSwitchToNC = columnWithCCheck & (
-            affinity < groupDf.sg_ab)  # Potential for improvement. Perform checks on the sliced of the DataFrame
 
-            return maskSwitchToNC.map(breedMaps["breedCMap"])
+            maskSwitchToNC = (affinity < groupDf.sg_ab)
+            groupDf.loc[:,breedColumns["nextCol"]] = maskSwitchToNC.map(breedMaps["breedCMap"])
+
         elif (breed.startswith("Breed_NC")):
-            columnWithNCCheck = (groupDf[breedColumns["currCol"]].str.startswith("Breed_NC"))
-            maskSwitchToC = columnWithNCCheck & (affinity < pd.Series(brand_factor) * groupDf.sg_ab)
 
-            return maskSwitchToC.map(breedMaps["breedNCMap"])
+            maskSwitchToC = (affinity < pd.Series(brand_factor) * groupDf.sg_ab)
+            groupDf.loc[:,breedColumns["nextCol"]] = maskSwitchToC.map(breedMaps["breedNCMap"])
+
         else:
             raise ValueError('Unknown breed %s. Can start with "Breed_C" or "Breed_NC".' % (breed))
 
