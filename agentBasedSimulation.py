@@ -85,7 +85,7 @@ class AgentBasedSimulation:
         data.loc[:, breedColumns["nextCol"]] = data.groupby(breedColumns["currCol"]).apply(lambda group: \
                         self.applyMutations(group,brand_factor,breedColumns,breedMaps))
 
-    def applyMutations(groupDf, brand_factor, breedColumns, breedMaps):
+    def applyMutations(self, groupDf, brand_factor, breedColumns, breedMaps):
         # arguments are a little bit all over the place. brand_factor, for example can be calced here.
 
         breed = np.unique(groupDf[breedColumns['currCol']])[
@@ -115,16 +115,18 @@ class AgentBasedSimulation:
             raise ValueError('Unknown breed %s. Can start with "Breed_C" or "Breed_NC".' % (breed))
 
 if __name__ == "__main__":
+    abs = AgentBasedSimulation()
+
     dataFilePath = "C:/Users/Nazariy/Desktop/Simudyne_Backend_Test.csv"
     saveFilePath = "C:/Users/Nazariy/Desktop/Simudyne_Bacend_Test_Output.csv"
     lb_BrandFactor = 0.1
     ub_BrandFactor = 2.9
 
-    inputData = processInputData2(dataFilePath)
+    inputData = abs.processInputData(dataFilePath)
     inputDataSize = len(inputData)
 
     start = time.time()
-    runModel(generateBrandFactorVector(lb_BrandFactor, ub_BrandFactor, inputDataSize), inputData)
+    abs.runModel(abs.generateBrandFactorVector(lb_BrandFactor, ub_BrandFactor, inputDataSize), inputData)
     end = time.time()
 
     print(inputData)
